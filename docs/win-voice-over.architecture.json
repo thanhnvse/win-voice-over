@@ -8,7 +8,7 @@
     "quality_profile": "showcase",
     "viewBox": [
       1200,
-      570
+      630
     ],
     "views": [
       {
@@ -53,11 +53,21 @@
         "focus": [
           "queue",
           "tts",
-          "gemini",
-          "popup",
-          "storage"
+          "bg",
+          "cloudtts",
+          "vieneu"
         ],
-        "note": "Browser voice by default; with a key, Gemini TTS through background.js. A failed Gemini line falls back to the browser voice."
+        "note": "Browser voice by default. background.js calls Gemini, Azure or VieNeu, so keys stay out of the page; a failed line uses the browser voice."
+      },
+      {
+        "id": "vieneu-local",
+        "label": "VieNeu on this computer",
+        "focus": [
+          "app",
+          "vieneu",
+          "bg"
+        ],
+        "note": "win-voice-over.app (macOS) or start-vieneu.cmd (Windows) runs the VieNeu-TTS server on 127.0.0.1:8000."
       }
     ]
   },
@@ -69,7 +79,7 @@
       "sublabel": "<video> + caption DOM",
       "pos": [
         40,
-        210
+        190
       ],
       "size": [
         160,
@@ -83,7 +93,7 @@
       "sublabel": "any .vtt player",
       "pos": [
         280,
-        100
+        90
       ],
       "size": [
         160,
@@ -97,7 +107,7 @@
       "sublabel": "YouTube, Netflix, picked",
       "pos": [
         280,
-        210
+        190
       ],
       "size": [
         160,
@@ -111,7 +121,7 @@
       "sublabel": "canvas -> text mask",
       "pos": [
         280,
-        320
+        290
       ],
       "size": [
         160,
@@ -126,7 +136,7 @@
       "sublabel": "emit()",
       "pos": [
         520,
-        210
+        190
       ],
       "size": [
         160,
@@ -140,7 +150,7 @@
       "sublabel": "rate fit + ducking",
       "pos": [
         760,
-        210
+        190
       ],
       "size": [
         160,
@@ -151,24 +161,10 @@
       "id": "tts",
       "type": "external",
       "label": "speechSynthesis",
-      "sublabel": "Edge Natural voice",
+      "sublabel": "default + fallback",
       "pos": [
         1000,
-        210
-      ],
-      "size": [
-        160,
-        60
-      ]
-    },
-    {
-      "id": "gemini",
-      "type": "cloud",
-      "label": "Gemini TTS API",
-      "sublabel": "optional, API key",
-      "pos": [
-        1000,
-        100
+        190
       ],
       "size": [
         160,
@@ -179,38 +175,10 @@
       "id": "storage",
       "type": "database",
       "label": "chrome.storage",
-      "sublabel": "settings, ocrSites",
+      "sublabel": "settings, API keys",
       "pos": [
         1000,
-        340
-      ],
-      "size": [
-        160,
-        60
-      ]
-    },
-    {
-      "id": "bg",
-      "type": "backend",
-      "label": "background.js",
-      "sublabel": "service worker relay",
-      "pos": [
-        280,
-        470
-      ],
-      "size": [
-        160,
-        60
-      ]
-    },
-    {
-      "id": "offscreen",
-      "type": "backend",
-      "label": "offscreen.html",
-      "sublabel": "ocr-engine.js",
-      "pos": [
-        520,
-        470
+        300
       ],
       "size": [
         160,
@@ -223,8 +191,36 @@
       "label": "Tesseract worker",
       "sublabel": "WASM + vie model",
       "pos": [
-        760,
-        470
+        40,
+        410
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "offscreen",
+      "type": "backend",
+      "label": "offscreen.html",
+      "sublabel": "ocr-engine.js",
+      "pos": [
+        280,
+        410
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "bg",
+      "type": "backend",
+      "label": "background.js",
+      "sublabel": "OCR relay + TTS calls",
+      "pos": [
+        520,
+        410
       ],
       "size": [
         160,
@@ -238,7 +234,49 @@
       "sublabel": "Alt+Shift+R",
       "pos": [
         1000,
-        470
+        410
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "cloudtts",
+      "type": "cloud",
+      "label": "Gemini / Azure TTS",
+      "sublabel": "optional, API key",
+      "pos": [
+        520,
+        530
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "vieneu",
+      "type": "backend",
+      "label": "VieNeu-TTS server",
+      "sublabel": "127.0.0.1:8000, no key",
+      "pos": [
+        760,
+        530
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "app",
+      "type": "frontend",
+      "label": "win-voice-over.app",
+      "sublabel": "or start-vieneu.cmd",
+      "pos": [
+        1000,
+        530
       ],
       "size": [
         160,
@@ -262,10 +300,18 @@
       "kind": "region",
       "label": "Extension",
       "wraps": [
-        "bg",
-        "offscreen",
         "tess",
+        "offscreen",
+        "bg",
         "popup"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "This computer",
+      "wraps": [
+        "vieneu",
+        "app"
       ]
     }
   ],
@@ -320,22 +366,19 @@
       "variant": "emphasis"
     },
     {
-      "id": "gemini-speech",
+      "id": "tts-request",
       "from": "queue",
-      "to": "gemini",
-      "label": "WAV via background.js",
-      "fromSide": "top",
-      "variant": "dashed"
+      "to": "bg",
+      "label": "sendMessage(tts)",
+      "variant": "dashed",
+      "toSide": "top"
     },
     {
       "id": "ocr-request",
       "from": "ocrcap",
       "to": "bg",
       "label": "sendMessage(PNG)",
-      "labelAt": [
-        360,
-        425
-      ]
+      "toSide": "top"
     },
     {
       "id": "relay",
@@ -348,6 +391,34 @@
       "from": "offscreen",
       "to": "tess",
       "label": "recognize"
+    },
+    {
+      "id": "cloud-speech",
+      "from": "bg",
+      "to": "cloudtts",
+      "label": "HTTPS + key",
+      "variant": "dashed",
+      "labelAt": [
+        600,
+        500
+      ]
+    },
+    {
+      "id": "local-speech",
+      "from": "bg",
+      "to": "vieneu",
+      "label": "HTTP, PCM",
+      "variant": "dashed",
+      "labelAt": [
+        720,
+        466
+      ]
+    },
+    {
+      "id": "start-server",
+      "from": "app",
+      "to": "vieneu",
+      "label": "starts, stops"
     },
     {
       "id": "save-settings",
@@ -386,8 +457,8 @@
       "dot": "amber",
       "title": "Speech",
       "items": [
-        "Browser voice, or Gemini TTS with a key",
-        "Current line always finishes",
+        "Browser voice by default, and the fallback",
+        "Gemini or Azure with a key; VieNeu with none",
         "Movie volume ducked while speaking"
       ]
     }
