@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Voice samples</title>
+  <style>
+    body { font: 15px system-ui, sans-serif; margin: 24px; max-width: 760px; color: #222; }
+    h1 { font-size: 20px; }
+    .controls { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+    select { min-width: 320px; }
+    li { margin: 10px 0; display: flex; gap: 10px; align-items: center; }
+    li span { flex: 1; }
+    button { cursor: pointer; padding: 4px 10px; }
+    .hint { color: #666; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <!-- Baseline for comparing cloud voices: plays the same lines with the browser's own voices.
+       Open it in Edge to hear the HoaiMy / NamMinh Online (Natural) voices. -->
+  <h1>Voice samples</h1>
+  <div class="controls">
+    <select id="voice"></select>
+    <label>Speed <input type="range" id="rate" min="0.7" max="1.6" step="0.1" value="1"></label>
+    <button id="all">Play all</button>
+    <button id="stop">Stop</button>
+  </div>
+  <ol id="lines"></ol>
+  <p class="hint">Copy the same lines into the cloud demos to compare.</p>
+  <script src="voice-samples.js"></script>
+</body>
+</html>

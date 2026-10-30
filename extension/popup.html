@@ -6,11 +6,14 @@
     body { width: 280px; margin: 0; padding: 14px; font: 13px/1.4 system-ui, sans-serif; color: #222; }
     h1 { font-size: 15px; margin: 0 0 12px; }
     label { display: block; margin: 10px 0 4px; }
-    select, input[type=range] { width: 100%; }
+    select, input[type=range], input[type=password], textarea { width: 100%; box-sizing: border-box; }
+    textarea { font: inherit; resize: vertical; }
     .row { display: flex; align-items: center; gap: 8px; }
     .value { float: right; color: #666; }
     button { width: 100%; margin-top: 8px; padding: 6px; cursor: pointer; }
     .hint { color: #666; font-size: 12px; margin-top: 10px; }
+    .status { color: #555; font-size: 12px; margin: 6px 0 0; min-height: 16px; }
+    #gemini { border-left: 3px solid #2563eb; padding-left: 8px; margin-top: 8px; }
   </style>
 </head>
 <body>
@@ -24,7 +27,25 @@
     <label for="ocr" style="margin:0">Read hard subtitles on this site (OCR)</label>
   </div>
 
-  <label for="voice">Voice</label>
+  <label for="engine">Speech engine</label>
+  <select id="engine">
+    <option value="browser">Browser voice (free, instant)</option>
+    <option value="gemini">Gemini TTS (expressive, needs an API key)</option>
+  </select>
+
+  <div id="gemini" hidden>
+    <label for="geminiKey">Gemini API key</label>
+    <input type="password" id="geminiKey" autocomplete="off" spellcheck="false" placeholder="Paste your key">
+    <p class="status" id="keyStatus"></p>
+    <label for="geminiModel">Model</label>
+    <select id="geminiModel"></select>
+    <label for="geminiVoice">Gemini voice</label>
+    <select id="geminiVoice"></select>
+    <label for="geminiStyle">Speaking style</label>
+    <textarea id="geminiStyle" rows="3"></textarea>
+  </div>
+
+  <label for="voice">Browser voice <span class="value" id="voiceRole"></span></label>
   <select id="voice"></select>
 
   <label for="rate">Base speed <span class="value" id="rateValue"></span></label>
@@ -34,12 +55,16 @@
   <input type="range" id="duck" min="0" max="1" step="0.05">
 
   <button id="test">Test voice</button>
+  <p class="status" id="testStatus"></p>
   <button id="pick">Pick subtitle element on this page</button>
   <button id="clear">Forget picked element for this site</button>
 
   <p class="hint">Hotkey: Alt+Shift+R turns reading on or off.<br>
     YouTube and Netflix work out of the box. Turn the site's subtitles on first.<br>
-    OCR is for subtitles burned into the picture; it is on by default for motchill.</p>
+    OCR is for subtitles burned into the picture; it is on by default for motchill.<br>
+    Gemini keys come from <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a>;
+    the key stays on this device and subtitle text is sent to Google.</p>
+  <script src="shared.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

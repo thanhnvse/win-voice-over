@@ -18,6 +18,8 @@
       ?mode=dom     captions rendered into the DOM, picked-selector path (default)
       ?mode=tracks  captions delivered through video.textTracks
       ?mode=ocr     subtitles burned into the video picture
+      ?mode=gemini  DOM captions spoken with the Gemini engine (API faked, audio real)
+      ?mode=gemini-error  the Gemini API fails, so lines fall back to the browser voice
   -->
   <video id="video" muted playsinline></video>
   <div class="caption-box"></div>

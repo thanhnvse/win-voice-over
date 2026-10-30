@@ -323,11 +323,12 @@ rect.c-bg-rect { fill: var(--bg); }
         <path data-edge-from="ocrcap" data-edge-to="emit" data-edge-key="5" data-edge-id="ocr-lines" data-composition-points="440,350;480,350;480,254;520,254" d="M 440 350 L 472 350 Q 480 350 480 342 L 480 262 Q 480 254 488 254 L 520 254" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         <path data-edge-from="emit" data-edge-to="queue" data-edge-key="6" data-edge-id="say" data-composition-points="680,240;760,240" d="M 680 240 L 760 240" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         <path data-edge-from="queue" data-edge-to="tts" data-edge-label="speak()" data-edge-key="7" data-edge-id="speak" data-composition-points="920,233;1000,233" d="M 920 233 L 1000 233" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
-        <path data-edge-from="ocrcap" data-edge-to="bg" data-edge-label="sendMessage(PNG)" data-edge-key="8" data-edge-id="ocr-request" data-composition-points="360,380;360,470" d="M 360 380 L 360 470" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="bg" data-edge-to="offscreen" data-edge-label="relay" data-edge-key="9" data-edge-id="relay" data-composition-points="440,500;520,500" d="M 440 500 L 520 500" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="offscreen" data-edge-to="tess" data-edge-label="recognize" data-edge-key="10" data-edge-id="recognize" data-composition-points="680,500;760,500" d="M 680 500 L 760 500" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="popup" data-edge-to="storage" data-edge-label="set" data-edge-key="11" data-edge-id="save-settings" data-composition-points="1080,470;1080,400" d="M 1080 470 L 1080 400" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="storage" data-edge-to="queue" data-edge-label="onChanged" data-edge-key="12" data-edge-id="settings-changed" data-composition-points="1000,370;960,370;960,247;920,247" d="M 1000 370 L 968 370 Q 960 370 960 362 L 960 255 Q 960 247 952 247 L 920 247" class="a-dashed" stroke-width="1.5" marker-end="url(#arrowhead-dashed)"/>
+        <path data-edge-from="queue" data-edge-to="gemini" data-edge-label="WAV via background.js" data-edge-key="8" data-edge-id="gemini-speech" data-composition-points="840,210;840,186;976,186;976,130;1000,130" d="M 840 210 L 840 194 Q 840 186 848 186 L 968 186 Q 976 186 976 178 L 976 138 Q 976 130 984 130 L 1000 130" class="a-dashed" stroke-width="1.5" marker-end="url(#arrowhead-dashed)"/>
+        <path data-edge-from="ocrcap" data-edge-to="bg" data-edge-label="sendMessage(PNG)" data-edge-key="9" data-edge-id="ocr-request" data-composition-points="360,380;360,470" d="M 360 380 L 360 470" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="bg" data-edge-to="offscreen" data-edge-label="relay" data-edge-key="10" data-edge-id="relay" data-composition-points="440,500;520,500" d="M 440 500 L 520 500" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="offscreen" data-edge-to="tess" data-edge-label="recognize" data-edge-key="11" data-edge-id="recognize" data-composition-points="680,500;760,500" d="M 680 500 L 760 500" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="popup" data-edge-to="storage" data-edge-label="set" data-edge-key="12" data-edge-id="save-settings" data-composition-points="1080,470;1080,400" d="M 1080 470 L 1080 400" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="storage" data-edge-to="queue" data-edge-label="onChanged" data-edge-key="13" data-edge-id="settings-changed" data-composition-points="1000,370;960,370;960,247;920,247" d="M 1000 370 L 968 370 Q 960 370 960 362 L 960 255 Q 960 247 952 247 L 920 247" class="a-dashed" stroke-width="1.5" marker-end="url(#arrowhead-dashed)"/>
 
         <!-- Components -->
         <g id="node-player" data-node-id="player" data-node-label="Video player" tabindex="0" role="button" aria-label="Focus Video player, &lt;video&gt; + caption DOM, Architecture component" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="&lt;video&gt; + caption DOM" data-node-context="Architecture component">
@@ -412,6 +413,17 @@ rect.c-bg-rect { fill: var(--bg); }
         <text x="1080" y="254" class="t-muted" font-size="9" text-anchor="middle">Edge Natural voice</text>
         </g>
 
+        <g id="node-gemini" data-node-id="gemini" data-node-label="Gemini TTS API" tabindex="0" role="button" aria-label="Focus Gemini TTS API, optional, API key, Architecture component" aria-pressed="false" data-node-kind="cloud" data-node-sublabel="optional, API key" data-node-context="Architecture component">
+          <title>Gemini TTS API · optional, API key · Architecture component</title>
+          <rect x="1000" y="100" width="160" height="60" rx="6" class="c-mask"/>
+          <rect x="1000" y="100" width="160" height="60" rx="6" class="c-cloud" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="cloud" class="semantic-sigil s-cloud" transform="translate(1006 106) scale(0.6875)">
+            <path d="M4.3 12.5h7.3a2.4 2.4 0 0 0 .2-4.8 4 4 0 0 0-7.5-1.3A3.1 3.1 0 0 0 4.3 12.5Z"/>
+          </g>
+          <text data-node-label="" x="1080" y="128" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Gemini TTS API</text>
+        <text x="1080" y="144" class="t-muted" font-size="9" text-anchor="middle">optional, API key</text>
+        </g>
+
         <g id="node-storage" data-node-id="storage" data-node-label="chrome.storage" tabindex="0" role="button" aria-label="Focus chrome.storage, settings, ocrSites, Architecture component" aria-pressed="false" data-node-kind="database" data-node-sublabel="settings, ocrSites" data-node-context="Architecture component">
           <title>chrome.storage · settings, ocrSites · Architecture component</title>
           <rect x="1000" y="340" width="160" height="60" rx="6" class="c-mask"/>
@@ -493,23 +505,27 @@ rect.c-bg-rect { fill: var(--bg); }
           <rect x="938.2" y="213" width="43.6" height="14" rx="3" class="c-mask"/>
           <text x="960" y="223" class="t-backend" font-size="8" text-anchor="middle">speak()</text>
         </g>
-        <g data-edge-from="ocrcap" data-edge-to="bg" data-edge-label="sendMessage(PNG)" data-edge-key="8" data-edge-id="ocr-request">
+        <g data-edge-from="queue" data-edge-to="gemini" data-edge-label="WAV via background.js" data-edge-key="8" data-edge-id="gemini-speech">
+          <rect x="852.6" y="166" width="110.8" height="14" rx="3" class="c-mask"/>
+          <text x="908" y="176" class="t-messagebus" font-size="8" text-anchor="middle">WAV via background.js</text>
+        </g>
+        <g data-edge-from="ocrcap" data-edge-to="bg" data-edge-label="sendMessage(PNG)" data-edge-key="9" data-edge-id="ocr-request">
           <rect x="316.6" y="415" width="86.8" height="14" rx="3" class="c-mask"/>
           <text x="360" y="425" class="t-muted" font-size="8" text-anchor="middle">sendMessage(PNG)</text>
         </g>
-        <g data-edge-from="bg" data-edge-to="offscreen" data-edge-label="relay" data-edge-key="9" data-edge-id="relay">
+        <g data-edge-from="bg" data-edge-to="offscreen" data-edge-label="relay" data-edge-key="10" data-edge-id="relay">
           <rect x="463" y="480" width="34" height="14" rx="3" class="c-mask"/>
           <text x="480" y="490" class="t-muted" font-size="8" text-anchor="middle">relay</text>
         </g>
-        <g data-edge-from="offscreen" data-edge-to="tess" data-edge-label="recognize" data-edge-key="10" data-edge-id="recognize">
+        <g data-edge-from="offscreen" data-edge-to="tess" data-edge-label="recognize" data-edge-key="11" data-edge-id="recognize">
           <rect x="693.4" y="480" width="53.199999999999996" height="14" rx="3" class="c-mask"/>
           <text x="720" y="490" class="t-muted" font-size="8" text-anchor="middle">recognize</text>
         </g>
-        <g data-edge-from="popup" data-edge-to="storage" data-edge-label="set" data-edge-key="11" data-edge-id="save-settings">
+        <g data-edge-from="popup" data-edge-to="storage" data-edge-label="set" data-edge-key="12" data-edge-id="save-settings">
           <rect x="1065" y="450" width="30" height="14" rx="3" class="c-mask"/>
           <text x="1080" y="460" class="t-muted" font-size="8" text-anchor="middle">set</text>
         </g>
-        <g data-edge-from="storage" data-edge-to="queue" data-edge-label="onChanged" data-edge-key="12" data-edge-id="settings-changed">
+        <g data-edge-from="storage" data-edge-to="queue" data-edge-label="onChanged" data-edge-key="13" data-edge-id="settings-changed">
           <rect x="933.4" y="288.5" width="53.199999999999996" height="14" rx="3" class="c-mask"/>
           <text x="960" y="298.5" class="t-messagebus" font-size="8" text-anchor="middle">onChanged</text>
         </g>

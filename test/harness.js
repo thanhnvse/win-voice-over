@@ -18,7 +18,44 @@ const stored = {
   dom: { selectors: { [location.hostname]: '.caption-box' } },
   tracks: {},
   ocr: { ocrSites: { [location.hostname]: true } },
+  gemini: { selectors: { [location.hostname]: '.caption-box' }, settings: { engine: 'gemini' } },
+  'gemini-error': { selectors: { [location.hostname]: '.caption-box' }, settings: { engine: 'gemini' } },
 }[mode];
+
+// A real 24 kHz mono 16-bit WAV, the format Gemini returns, so the page decodes real audio.
+function wavBase64(seconds) {
+  const rate = 24000;
+  const n = Math.round(seconds * rate);
+  const view = new DataView(new ArrayBuffer(44 + n * 2));
+  const ascii = (at, s) => [...s].forEach((c, i) => view.setUint8(at + i, c.charCodeAt(0)));
+  ascii(0, 'RIFF');
+  view.setUint32(4, 36 + n * 2, true);
+  ascii(8, 'WAVEfmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, rate, true);
+  view.setUint32(28, rate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  ascii(36, 'data');
+  view.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) view.setInt16(44 + i * 2, Math.round(Math.sin((i / rate) * 2 * Math.PI * 220) * 8000), true);
+  const bytes = new Uint8Array(view.buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(binary);
+}
+
+// Stands in for background.js answering { type: 'tts' }: 500 ms of network and generation,
+// then audio as long as speech of that text would be.
+async function fakeGemini(msg) {
+  record('tts', { text: msg.text, prefetch: Boolean(msg.prefetch) });
+  if (mode === 'gemini-error') return msg.prefetch ? {} : { error: 'no Gemini API key; add one in the popup' };
+  if (msg.prefetch) return {};
+  await sleep(500);
+  return { data: wavBase64(Math.max(0.6, msg.text.length / 14)), mimeType: 'audio/wav' };
+}
 
 window.chrome = {
   storage: {
@@ -34,6 +71,7 @@ window.chrome = {
     onMessage: { addListener(fn) { window.__onMessage = fn; } },
     // Stands in for background.js + offscreen.js.
     async sendMessage(msg) {
+      if (msg.type === 'tts') return fakeGemini(msg);
       if (msg.type === 'ocr-warmup') {
         ocrEngine();
         record('warmup');
@@ -51,6 +89,42 @@ window.chrome = {
     },
   },
 };
+
+// A real <audio>, so the WAV really decodes and reports its duration; only play() and pause()
+// are faked, because the harness has no user gesture and real autoplay would be refused.
+const RealAudio = window.Audio;
+window.Audio = function FakeAudio(src) {
+  const audio = new RealAudio(src);
+  const realPause = audio.pause.bind(audio);
+  audio.play = () => {
+    record('audio-play', {
+      seconds: +audio.duration.toFixed(2),
+      rate: +audio.playbackRate.toFixed(2),
+      preservesPitch: audio.preservesPitch,
+      volume: +video.volume.toFixed(2),
+    });
+    audio.fakeTimer = setTimeout(() => {
+      record('audio-ended');
+      audio.dispatchEvent(new Event('ended'));
+    }, (audio.duration / audio.playbackRate) * 1000);
+    return Promise.resolve();
+  };
+  audio.pause = () => {
+    clearTimeout(audio.fakeTimer);
+    record('audio-paused');
+    realPause();
+  };
+  return audio;
+};
+
+// Records the extension's on-page toasts.
+new MutationObserver((mutations) => {
+  for (const m of mutations) {
+    for (const node of m.addedNodes) {
+      if (node.textContent && node.textContent.startsWith('Win Voice Over')) record('toast', { text: node.textContent });
+    }
+  }
+}).observe(document.body, { childList: true });
 
 // Plays one utterance at a time, like the real engine, at roughly 14 chars per second.
 const video = document.getElementById('video');
@@ -179,7 +253,7 @@ async function run() {
   }
   record('play');
   await video.play();
-  if (mode === 'dom') {
+  if (mode === 'dom' || mode.startsWith('gemini')) {
     const box = document.querySelector('.caption-box');
     DOM_LINES.forEach((text, i) => setTimeout(() => { box.textContent = text; }, i * 1000));
   }
@@ -188,7 +262,11 @@ async function run() {
   setTimeout(() => { record('done', { volume: +video.volume.toFixed(2) }); window.__done = true; }, 11500);
 }
 
-const script = document.createElement('script');
-script.src = '../extension/content.js';
-script.onload = run;
-document.body.appendChild(script);
+// Same order as the manifest's content_scripts list.
+function load(src) {
+  return new Promise((resolve, reject) => {
+    const script = Object.assign(document.createElement('script'), { src, onload: resolve, onerror: reject });
+    document.body.appendChild(script);
+  });
+}
+load('../extension/shared.js').then(() => load('../extension/content.js')).then(run);

@@ -2,10 +2,12 @@
   if (window.__winVoiceOverLoaded) return;
   window.__winVoiceOverLoaded = true;
 
-  const DEFAULTS = { enabled: true, voiceURI: '', rate: 1.1, duck: 0.3 };
+  const { DEFAULTS, OCR_DEFAULT_HOSTS } = globalThis.WVO;
   // Rough speaking speed at rate 1.0; used to fit a cue into its on-screen time.
   const CHARS_PER_SEC = 14;
   const MAX_RATE = 2.5;
+  // Gemini audio is sped up without changing pitch, but past this it sounds rushed.
+  const MAX_GEMINI_RATE = 1.6;
 
   // Sites that draw captions into the DOM instead of video.textTracks.
   const SITE_SOURCES = [
@@ -51,6 +53,8 @@
   let pressure = 0;
   let restoreTimer = null;
   let duckState = null;
+  let currentAudio = null;
+  let geminiErrorShown = false;
 
   function activeVideo() {
     let best = null;
@@ -102,24 +106,17 @@
       // because by the time it would play it is already stale.
       pressure = Math.min(pressure + 1, 4);
       waiting = { text, seconds, at: Date.now() };
+      if (settings.engine === 'gemini') {
+        // Synthesise now so the audio is ready when the current line ends.
+        sendToExtension({ type: 'tts', text, prefetch: true })
+          .catch((err) => console.warn('Win Voice Over: Gemini prefetch failed', err));
+      }
       return;
     }
     speakNow(text, seconds);
   }
 
   function speakNow(text, seconds) {
-    const u = new SpeechSynthesisUtterance(text);
-    const voice = pickVoice();
-    if (voice) {
-      u.voice = voice;
-      u.lang = voice.lang;
-    } else {
-      u.lang = 'vi-VN';
-    }
-    let rate = settings.rate * (1 + 0.2 * pressure);
-    if (seconds > 0.3) rate = Math.max(rate, text.length / CHARS_PER_SEC / seconds);
-    u.rate = Math.min(rate, MAX_RATE);
-
     const mine = generation;
     speaking = true;
     const finish = () => {
@@ -135,11 +132,85 @@
         restoreTimer = setTimeout(() => duck(false), 400);
       }
     };
-    u.onend = finish;
-    u.onerror = finish;
 
     duck(true);
+    if (settings.engine === 'gemini') speakGemini(text, seconds, mine, finish);
+    else speakBrowser(text, seconds, finish);
+  }
+
+  function speakBrowser(text, seconds, finish) {
+    const u = new SpeechSynthesisUtterance(text);
+    const voice = pickVoice();
+    if (voice) {
+      u.voice = voice;
+      u.lang = voice.lang;
+    } else {
+      u.lang = 'vi-VN';
+    }
+    let rate = settings.rate * (1 + 0.2 * pressure);
+    if (seconds > 0.3) rate = Math.max(rate, text.length / CHARS_PER_SEC / seconds);
+    u.rate = Math.min(rate, MAX_RATE);
+    u.onend = finish;
+    u.onerror = finish;
     speechSynthesis.speak(u);
+  }
+
+  // Gemini answers with base64 WAV; play it from a blob so the browser decodes it.
+  function loadAudio(result) {
+    const audio = new Audio(URL.createObjectURL(globalThis.WVO.audioBlob(result)));
+    // Speeding up to catch up with the subtitles must not raise the pitch.
+    audio.preservesPitch = true;
+    return new Promise((resolve, reject) => {
+      audio.onloadedmetadata = () => resolve(audio);
+      audio.onerror = () => {
+        URL.revokeObjectURL(audio.src);
+        reject(new Error('the page could not play the Gemini audio'));
+      };
+    });
+  }
+
+  async function speakGemini(text, seconds, mine, finish) {
+    const requested = Date.now();
+    try {
+      const result = await sendToExtension({ type: 'tts', text });
+      if (result.error) throw new Error(result.error);
+      if (mine !== generation) return; // paused, seeked or switched off while waiting
+      const audio = await loadAudio(result);
+      if (mine !== generation) {
+        URL.revokeObjectURL(audio.src);
+        return;
+      }
+      const left = seconds - (Date.now() - requested) / 1000;
+      let rate = settings.rate * (1 + 0.15 * pressure);
+      if (left > 0.3) rate = Math.max(rate, audio.duration / left);
+      audio.playbackRate = Math.min(rate, MAX_GEMINI_RATE);
+      const done = () => {
+        URL.revokeObjectURL(audio.src);
+        if (currentAudio === audio) currentAudio = null;
+        finish();
+      };
+      audio.onended = done;
+      audio.onerror = done;
+      currentAudio = audio;
+      try {
+        await audio.play();
+      } catch (err) {
+        currentAudio = null;
+        URL.revokeObjectURL(audio.src);
+        throw err;
+      }
+    } catch (err) {
+      reportGeminiError(err);
+      // Say the line with the browser voice rather than skip it.
+      if (mine === generation) speakBrowser(text, seconds, finish);
+    }
+  }
+
+  function reportGeminiError(err) {
+    console.error('Win Voice Over: Gemini TTS failed, using the browser voice', err);
+    if (geminiErrorShown) return;
+    geminiErrorShown = true;
+    toast(`Win Voice Over: Gemini TTS failed (${err.message}), using the browser voice`, 5000);
   }
 
   function cancelAll() {
@@ -147,6 +218,11 @@
     speaking = false;
     waiting = null;
     speechSynthesis.cancel();
+    if (currentAudio) {
+      currentAudio.pause();
+      URL.revokeObjectURL(currentAudio.src);
+      currentAudio = null;
+    }
   }
 
   function stopSpeaking() {
@@ -252,7 +328,6 @@
   // Hard subtitles exist only as pixels. Sample the bottom of the frame and keep the light
   // glyphs that a dark outline walls in, which is how subtitles are drawn and bright scenery
   // is not. OCR the text found there once it has changed and then held still.
-  const OCR_DEFAULT_HOSTS = /motchill/i;
   const OCR_INTERVAL_MS = 300;
   const OCR_REGION = 0.25; // bottom share of the frame that holds subtitles
   const OCR_HEIGHT = 720; // frames are scaled to this height so glyph sizes are predictable
@@ -555,7 +630,7 @@
 
   // ---------- on-page toast ----------
 
-  function toast(message) {
+  function toast(message, ms = 1500) {
     if (window !== window.top) return;
     const el = document.createElement('div');
     el.textContent = message;
@@ -563,7 +638,7 @@
       + 'background:rgba(20,20,20,.88);color:#fff;font:14px/1.4 system-ui,sans-serif;padding:8px 14px;'
       + 'border-radius:8px;pointer-events:none';
     (document.fullscreenElement || document.body).appendChild(el);
-    setTimeout(() => el.remove(), 1500);
+    setTimeout(() => el.remove(), ms);
   }
 
   // ---------- picker: let the user click the subtitle element once per site ----------
@@ -631,6 +706,8 @@
     if (changes.settings) {
       const wasEnabled = settings.enabled;
       settings = { ...DEFAULTS, ...changes.settings.newValue };
+      // A changed voice, model or engine deserves a fresh error report if it fails too.
+      geminiErrorShown = false;
       if (!settings.enabled) stopSpeaking();
       if (wasEnabled !== settings.enabled) {
         refreshOcr();

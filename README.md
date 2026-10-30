@@ -1,8 +1,9 @@
 # Win Voice Over
 
-A Chrome/Edge extension (Manifest V3) that reads subtitles aloud with the
-browser's text-to-speech while you watch, including subtitles burned into the
-picture (via OCR).
+A Chrome/Edge extension (Manifest V3) that reads subtitles aloud while you
+watch, including subtitles burned into the picture (via OCR). It speaks with the
+browser's own voices, or with the more expressive Gemini TTS voices if you add
+an API key.
 
 ## How it works
 
@@ -52,6 +53,36 @@ python scripts/make-icons.py
 Use **Edge** if you can: its `speechSynthesis` exposes the Microsoft
 "Online (Natural)" Vietnamese voices (HoaiMy, NamMinh), which sound far better
 than the default ones. Pick one in the popup, or leave it on *Auto*.
+
+## Gemini TTS (expressive voices)
+
+The browser voices stay the default. To switch:
+
+1. Create a key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey).
+2. Popup → *Speech engine* → **Gemini TTS**, paste the key, then **Test voice**.
+   The status line shows how long the round trip took.
+3. Pick a model (*3.8 Flash TTS*, or the cheaper *3.8 Flash-Lite TTS*), one of
+   the 30 Gemini voices, and a speaking style. The style is a direction such as
+   "an expressive voice actor dubbing a TV drama"; Gemini follows it without
+   reading it aloud.
+
+How it behaves:
+
+- The background worker calls `POST /v1beta/interactions` with a 15 s timeout and
+  keeps the last 100 results, so a repeated line costs nothing.
+- While one line plays, the next is already being generated (prefetch).
+- Audio plays in the tab and is sped up without raising the pitch, up to 1.6×,
+  when lines arrive faster than they can be said.
+- If a request fails (no key, quota, network, a page that blocks the audio), that
+  line is spoken with the browser voice instead, and a toast says why once per page.
+- The key is kept in `chrome.storage.local`, so it is not synced to your other
+  browsers. Subtitle text is sent to Google.
+
+Cost and limits: these models have a free tier, but Google does not publish its
+rate limits (see AI Studio for yours). Paid, 3.8 Flash TTS costs $9 per million
+audio tokens through 2026, and one second of audio is 25 tokens, so an hour of
+speech is about $0.81. Generation time per line has not been measured yet; use
+**Test voice** to see it on your connection.
 
 ## Where subtitles come from
 
@@ -119,6 +150,8 @@ which can no longer reach the extension.
 | Netflix | Vietnamese subtitles on | Lines spoken; if not, use *Pick subtitle element* |
 | OCR | motchill episode, past the ad | OCR box ticked in the popup; lines spoken 0.5–2 s after they appear |
 | OCR engine | `edge://extensions` → Win Voice Over → *Inspect views: offscreen.html* | Appears after the first play; "Parameter not found" warnings are harmless |
+| Gemini | Popup → *Gemini TTS* → paste key → **Test voice** | "Generated in N s" and the sentence is spoken |
+| Gemini in a video | Same video as above with Gemini selected | Gemini voice reads the lines; any failure falls back to the browser voice with a toast |
 
 Where to look when something is wrong:
 
@@ -142,4 +175,16 @@ python test/serve.py 5310
 ```
 
 Then open `http://localhost:5310/test/harness.html` with `?mode=dom`,
-`?mode=tracks` or `?mode=ocr`.
+`?mode=tracks`, `?mode=ocr`, `?mode=gemini` (fake API, real WAV decoding) or
+`?mode=gemini-error` (the API fails, lines fall back to the browser voice).
+
+`http://localhost:5310/test/popup-preview.html?engine=gemini` renders the real
+popup against a fake `chrome` API, and `test/voice-samples.html` plays six test
+lines with the browser voices for comparing them with cloud voices.
+
+The background worker's Gemini code (request shape, parsing, cache, prefetch,
+HTTP errors, missing audio, timeout) runs under Node with a fake `fetch`:
+
+```bash
+node test/background.test.mjs
+```
