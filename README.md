@@ -1,4 +1,4 @@
-# Sub Reader
+# Win Voice Over
 
 A Chrome/Edge extension (Manifest V3) that reads subtitles aloud with the
 browser's text-to-speech while you watch, including subtitles burned into the
@@ -6,18 +6,18 @@ picture (via OCR).
 
 ## How it works
 
-![Sub Reader: from subtitles to speech](docs/sub-reader.svg)
+![Win Voice Over: from subtitles to speech](docs/win-voice-over.svg)
 
-Interactive version with guided views: [`docs/sub-reader.html`](docs/sub-reader.html).
-The diagram is generated with Archify from `docs/sub-reader.architecture.json`;
+Interactive version with guided views: [`docs/win-voice-over.html`](docs/win-voice-over.html).
+The diagram is generated with Archify from `docs/win-voice-over.architecture.json`;
 after editing that file, rebuild both outputs from the archify skill folder:
 
 ```bash
-node bin/archify.mjs deliver architecture <repo>/docs/sub-reader.architecture.json <repo>/docs/sub-reader.html --quality showcase
+node bin/archify.mjs deliver architecture <repo>/docs/win-voice-over.architecture.json <repo>/docs/win-voice-over.html --quality showcase
 ```
 
 ```bash
-node scripts/export-diagram-svg.mjs docs/sub-reader.html docs/sub-reader.svg
+node scripts/export-diagram-svg.mjs docs/win-voice-over.html docs/win-voice-over.svg
 ```
 
 ## Install
@@ -40,6 +40,13 @@ npm install --ignore-scripts
 
 ```bash
 npm run vendor
+```
+
+The icons in `extension/icons/` (a white W on blue) are drawn by a script, which
+needs Pillow and the Segoe UI Bold font:
+
+```bash
+python scripts/make-icons.py
 ```
 
 Use **Edge** if you can: its `speechSynthesis` exposes the Microsoft
@@ -108,14 +115,14 @@ which can no longer reach the extension.
 | Voice | Popup → pick *HoaiMy Online (Natural)* → **Test voice** | Vietnamese sentence is spoken |
 | YouTube | Video with Vietnamese captions, CC on | Each line spoken; movie volume dips while speaking |
 | Pause / seek | Pause, or jump in the timeline | Speech stops at once |
-| Hotkey | Alt+Shift+R twice | Toasts "Sub Reader: off", then "on" |
+| Hotkey | Alt+Shift+R twice | Toasts "Win Voice Over: off", then "on" |
 | Netflix | Vietnamese subtitles on | Lines spoken; if not, use *Pick subtitle element* |
 | OCR | motchill episode, past the ad | OCR box ticked in the popup; lines spoken 0.5–2 s after they appear |
-| OCR engine | `edge://extensions` → Sub Reader → *Inspect views: offscreen.html* | Appears after the first play; "Parameter not found" warnings are harmless |
+| OCR engine | `edge://extensions` → Win Voice Over → *Inspect views: offscreen.html* | Appears after the first play; "Parameter not found" warnings are harmless |
 
 Where to look when something is wrong:
 
-- Page DevTools console, filtered by `Sub Reader`: content-script errors such as
+- Page DevTools console, filtered by `Win Voice Over`: content-script errors such as
   `OCR failed` or `cannot read frames from this video`.
 - *Inspect views: service worker* on the extension card: the background relay.
 - For bad OCR, a screenshot of a frame with the subtitle shows whether the text

@@ -2,9 +2,9 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "Sub Reader: from subtitles to speech",
+    "title": "Win Voice Over: from subtitles to speech",
     "locale": "en",
-    "output": "sub-reader.html",
+    "output": "win-voice-over.html",
     "quality_profile": "showcase",
     "viewBox": [1200, 570],
     "views": [

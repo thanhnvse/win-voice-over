@@ -1,6 +1,6 @@
 (() => {
-  if (window.__subReaderLoaded) return;
-  window.__subReaderLoaded = true;
+  if (window.__winVoiceOverLoaded) return;
+  window.__winVoiceOverLoaded = true;
 
   const DEFAULTS = { enabled: true, voiceURI: '', rate: 1.1, duck: 0.3 };
   // Rough speaking speed at rate 1.0; used to fit a cue into its on-screen time.
@@ -483,10 +483,10 @@
   }
 
   function reportOcrError(state, err) {
-    console.error('Sub Reader: OCR failed', err);
+    console.error('Win Voice Over: OCR failed', err);
     if (state.errorShown) return;
     state.errorShown = true;
-    toast('Sub Reader: OCR failed, see the console');
+    toast('Win Voice Over: OCR failed, see the console');
   }
 
   function ocrTick() {
@@ -511,8 +511,8 @@
       frame = textMask(strip);
     } catch (err) {
       ocrBlocked.add(video);
-      console.error('Sub Reader: cannot read frames from this video', err);
-      toast('Sub Reader: this video blocks frame capture, OCR is off for it');
+      console.error('Win Voice Over: cannot read frames from this video', err);
+      toast('Win Voice Over: this video blocks frame capture, OCR is off for it');
       return;
     }
 
@@ -585,10 +585,10 @@
     if (picking) return;
     let hovered = null;
     const outline = (el) => {
-      if (hovered) hovered.style.outline = hovered.dataset.subReaderOutline || '';
+      if (hovered) hovered.style.outline = hovered.dataset.winVoiceOverOutline || '';
       hovered = el;
       if (el) {
-        el.dataset.subReaderOutline = el.style.outline;
+        el.dataset.winVoiceOverOutline = el.style.outline;
         el.style.outline = '2px solid #f5a623';
       }
     };
@@ -599,7 +599,7 @@
       const selector = buildSelector(e.target);
       stopPicker();
       chrome.storage.sync.set({ selectors: { ...selectors, [location.hostname]: selector } });
-      toast('Sub Reader: subtitle element saved for ' + location.hostname);
+      toast('Win Voice Over: subtitle element saved for ' + location.hostname);
     };
     const onKey = (e) => { if (e.key === 'Escape') stopPicker(); };
     document.addEventListener('mouseover', onOver, true);
@@ -611,7 +611,7 @@
       document.removeEventListener('click', onClick, true);
       document.removeEventListener('keydown', onKey, true);
     };
-    toast('Sub Reader: pause on a subtitle line, then click it (Esc to cancel)');
+    toast('Win Voice Over: pause on a subtitle line, then click it (Esc to cancel)');
   }
 
   function stopPicker() {
@@ -634,7 +634,7 @@
       if (!settings.enabled) stopSpeaking();
       if (wasEnabled !== settings.enabled) {
         refreshOcr();
-        if (document.querySelector('video')) toast(settings.enabled ? 'Sub Reader: on' : 'Sub Reader: off');
+        if (document.querySelector('video')) toast(settings.enabled ? 'Win Voice Over: on' : 'Win Voice Over: off');
       }
     }
     if (changes.selectors) {

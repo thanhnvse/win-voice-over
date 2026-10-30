@@ -2,7 +2,7 @@
 // (autoTheme: follows light/dark via prefers-color-scheme), without clicking by hand.
 // Archify has no CLI command for this, so drive its bundled headless Chrome helper.
 //
-// Usage: node scripts/export-diagram-svg.mjs docs/sub-reader.html docs/sub-reader.svg
+// Usage: node scripts/export-diagram-svg.mjs docs/win-voice-over.html docs/win-voice-over.svg
 // ARCHIFY_HOME overrides where the archify skill lives.
 import fs from 'node:fs';
 import path from 'node:path';
