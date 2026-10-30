@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { width: 280px; margin: 0; padding: 14px; font: 13px/1.4 system-ui, sans-serif; color: #222; }
+    h1 { font-size: 15px; margin: 0 0 12px; }
+    label { display: block; margin: 10px 0 4px; }
+    select, input[type=range] { width: 100%; }
+    .row { display: flex; align-items: center; gap: 8px; }
+    .value { float: right; color: #666; }
+    button { width: 100%; margin-top: 8px; padding: 6px; cursor: pointer; }
+    .hint { color: #666; font-size: 12px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Sub Reader</h1>
+  <div class="row">
+    <input type="checkbox" id="enabled">
+    <label for="enabled" style="margin:0">Read subtitles aloud</label>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <input type="checkbox" id="ocr">
+    <label for="ocr" style="margin:0">Read hard subtitles on this site (OCR)</label>
+  </div>
+
+  <label for="voice">Voice</label>
+  <select id="voice"></select>
+
+  <label for="rate">Base speed <span class="value" id="rateValue"></span></label>
+  <input type="range" id="rate" min="0.7" max="2" step="0.1">
+
+  <label for="duck">Movie volume while reading <span class="value" id="duckValue"></span></label>
+  <input type="range" id="duck" min="0" max="1" step="0.05">
+
+  <button id="test">Test voice</button>
+  <button id="pick">Pick subtitle element on this page</button>
+  <button id="clear">Forget picked element for this site</button>
+
+  <p class="hint">Hotkey: Alt+Shift+R turns reading on or off.<br>
+    YouTube and Netflix work out of the box. Turn the site's subtitles on first.<br>
+    OCR is for subtitles burned into the picture; it is on by default for motchill.</p>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "win-subreader",
+  "private": true,
+  "description": "Build helpers for the Sub Reader extension. The extension itself has no build step.",
+  "scripts": {
+    "vendor": "node scripts/vendor.mjs"
+  },
+  "devDependencies": {
+    "@tesseract.js-data/vie": "1.0.0",
+    "tesseract.js": "7.0.0"
+  }
+}

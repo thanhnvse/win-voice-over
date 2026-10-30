@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Sub Reader",
+  "version": "0.2.0",
+  "description": "Reads subtitles aloud with text-to-speech while you watch, including subtitles burned into the picture.",
+  "permissions": ["storage", "activeTab", "offscreen"],
+  "background": { "service_worker": "background.js" },
+  "action": { "default_popup": "popup.html", "default_title": "Sub Reader" },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  },
+  "commands": {
+    "toggle-reading": {
+      "suggested_key": { "default": "Alt+Shift+R" },
+      "description": "Turn subtitle reading on or off"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "all_frames": true,
+      "run_at": "document_idle"
+    }
+  ]
+}
