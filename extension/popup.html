@@ -6,14 +6,14 @@
     body { width: 280px; margin: 0; padding: 14px; font: 13px/1.4 system-ui, sans-serif; color: #222; }
     h1 { font-size: 15px; margin: 0 0 12px; }
     label { display: block; margin: 10px 0 4px; }
-    select, input[type=range], input[type=password], textarea { width: 100%; box-sizing: border-box; }
+    select, input[type=range], input[type=password], input[type=text], textarea { width: 100%; box-sizing: border-box; }
     textarea { font: inherit; resize: vertical; }
     .row { display: flex; align-items: center; gap: 8px; }
     .value { float: right; color: #666; }
     button { width: 100%; margin-top: 8px; padding: 6px; cursor: pointer; }
     .hint { color: #666; font-size: 12px; margin-top: 10px; }
     .status { color: #555; font-size: 12px; margin: 6px 0 0; min-height: 16px; }
-    #gemini { border-left: 3px solid #2563eb; padding-left: 8px; margin-top: 8px; }
+    #gemini, #azure, #vieneu { border-left: 3px solid #2563eb; padding-left: 8px; margin-top: 8px; }
   </style>
 </head>
 <body>
@@ -31,6 +31,8 @@
   <select id="engine">
     <option value="browser">Browser voice (free, instant)</option>
     <option value="gemini">Gemini TTS (expressive, needs an API key)</option>
+    <option value="azure">Azure TTS (the Edge voices, needs a key)</option>
+    <option value="vieneu">VieNeu (free, runs on this computer)</option>
   </select>
 
   <div id="gemini" hidden>
@@ -43,6 +45,22 @@
     <select id="geminiVoice"></select>
     <label for="geminiStyle">Speaking style</label>
     <textarea id="geminiStyle" rows="3"></textarea>
+  </div>
+
+  <div id="azure" hidden>
+    <label for="azureKey">Azure Speech key</label>
+    <input type="password" id="azureKey" autocomplete="off" spellcheck="false" placeholder="Paste KEY 1">
+    <p class="status" id="azureKeyStatus"></p>
+    <label for="azureRegion">Region</label>
+    <input type="text" id="azureRegion" autocomplete="off" spellcheck="false" placeholder="southeastasia">
+    <label for="azureVoice">Azure voice</label>
+    <select id="azureVoice"></select>
+  </div>
+
+  <div id="vieneu" hidden>
+    <label for="vieneuVoice">VieNeu voice</label>
+    <select id="vieneuVoice"></select>
+    <p class="status" id="vieneuStatus"></p>
   </div>
 
   <label for="voice">Browser voice <span class="value" id="voiceRole"></span></label>
@@ -63,7 +81,10 @@
     YouTube and Netflix work out of the box. Turn the site's subtitles on first.<br>
     OCR is for subtitles burned into the picture; it is on by default for motchill.<br>
     Gemini keys come from <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a>;
-    the key stays on this device and subtitle text is sent to Google.</p>
+    the key stays on this device and subtitle text is sent to Google.<br>
+    Azure: create a Speech resource in the <a href="https://portal.azure.com" target="_blank">Azure portal</a>,
+    then copy KEY 1 and the region from <i>Keys and Endpoint</i>; subtitle text is sent to Microsoft.<br>
+    VieNeu runs on this computer, so subtitle text stays here.</p>
   <script src="shared.js"></script>
   <script src="popup.js"></script>
 </body>

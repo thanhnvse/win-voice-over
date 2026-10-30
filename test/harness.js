@@ -20,7 +20,12 @@ const stored = {
   ocr: { ocrSites: { [location.hostname]: true } },
   gemini: { selectors: { [location.hostname]: '.caption-box' }, settings: { engine: 'gemini' } },
   'gemini-error': { selectors: { [location.hostname]: '.caption-box' }, settings: { engine: 'gemini' } },
+  azure: { selectors: { [location.hostname]: '.caption-box' }, settings: { engine: 'azure' } },
+  'azure-error': { selectors: { [location.hostname]: '.caption-box' }, settings: { engine: 'azure' } },
+  vieneu: { selectors: { [location.hostname]: '.caption-box' }, settings: { engine: 'vieneu' } },
+  'vieneu-error': { selectors: { [location.hostname]: '.caption-box' }, settings: { engine: 'vieneu' } },
 }[mode];
+const audioMode = ['gemini', 'azure', 'vieneu'].some((engine) => mode.startsWith(engine));
 
 // A real 24 kHz mono 16-bit WAV, the format Gemini returns, so the page decodes real audio.
 function wavBase64(seconds) {
@@ -48,10 +53,15 @@ function wavBase64(seconds) {
 }
 
 // Stands in for background.js answering { type: 'tts' }: 500 ms of network and generation,
-// then audio as long as speech of that text would be.
-async function fakeGemini(msg) {
+// then audio as long as speech of that text would be. Every engine gets WAV here; the real
+// Azure reply is MP3, which the page plays through the same Audio element.
+async function fakeEngine(msg) {
   record('tts', { text: msg.text, prefetch: Boolean(msg.prefetch) });
-  if (mode === 'gemini-error') return msg.prefetch ? {} : { error: 'no Gemini API key; add one in the popup' };
+  if (mode === 'vieneu-error') return msg.prefetch ? {} : { error: 'VieNeu is not reachable at 127.0.0.1:8000' };
+  if (mode.endsWith('-error')) {
+    const name = mode.startsWith('azure') ? 'Azure' : 'Gemini';
+    return msg.prefetch ? {} : { error: `no ${name} API key; add one in the popup` };
+  }
   if (msg.prefetch) return {};
   await sleep(500);
   return { data: wavBase64(Math.max(0.6, msg.text.length / 14)), mimeType: 'audio/wav' };
@@ -71,7 +81,7 @@ window.chrome = {
     onMessage: { addListener(fn) { window.__onMessage = fn; } },
     // Stands in for background.js + offscreen.js.
     async sendMessage(msg) {
-      if (msg.type === 'tts') return fakeGemini(msg);
+      if (msg.type === 'tts') return fakeEngine(msg);
       if (msg.type === 'ocr-warmup') {
         ocrEngine();
         record('warmup');
@@ -253,7 +263,7 @@ async function run() {
   }
   record('play');
   await video.play();
-  if (mode === 'dom' || mode.startsWith('gemini')) {
+  if (mode === 'dom' || audioMode) {
     const box = document.querySelector('.caption-box');
     DOM_LINES.forEach((text, i) => setTimeout(() => { box.textContent = text; }, i * 1000));
   }

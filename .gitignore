@@ -1,3 +1,7 @@
 node_modules/
 __pycache__/
 docs/*.visual-check.*
+# VieNeu-TTS is its own git checkout, kept here so it sits next to the extension;
+# vieneu-samples holds listening tests made with it.
+VieNeu-TTS/
+vieneu-samples/

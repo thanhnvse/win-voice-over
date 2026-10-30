@@ -2,12 +2,12 @@
   if (window.__winVoiceOverLoaded) return;
   window.__winVoiceOverLoaded = true;
 
-  const { DEFAULTS, OCR_DEFAULT_HOSTS } = globalThis.WVO;
+  const { DEFAULTS, OCR_DEFAULT_HOSTS, AUDIO_ENGINES } = globalThis.WVO;
   // Rough speaking speed at rate 1.0; used to fit a cue into its on-screen time.
   const CHARS_PER_SEC = 14;
   const MAX_RATE = 2.5;
-  // Gemini audio is sped up without changing pitch, but past this it sounds rushed.
-  const MAX_GEMINI_RATE = 1.6;
+  // Engine audio is sped up without changing pitch, but past this it sounds rushed.
+  const MAX_AUDIO_RATE = 1.6;
 
   // Sites that draw captions into the DOM instead of video.textTracks.
   const SITE_SOURCES = [
@@ -54,7 +54,7 @@
   let restoreTimer = null;
   let duckState = null;
   let currentAudio = null;
-  let geminiErrorShown = false;
+  let audioErrorShown = false;
 
   function activeVideo() {
     let best = null;
@@ -106,10 +106,10 @@
       // because by the time it would play it is already stale.
       pressure = Math.min(pressure + 1, 4);
       waiting = { text, seconds, at: Date.now() };
-      if (settings.engine === 'gemini') {
+      if (AUDIO_ENGINES[settings.engine]) {
         // Synthesise now so the audio is ready when the current line ends.
         sendToExtension({ type: 'tts', text, prefetch: true })
-          .catch((err) => console.warn('Win Voice Over: Gemini prefetch failed', err));
+          .catch((err) => console.warn('Win Voice Over: TTS prefetch failed', err));
       }
       return;
     }
@@ -134,7 +134,7 @@
     };
 
     duck(true);
-    if (settings.engine === 'gemini') speakGemini(text, seconds, mine, finish);
+    if (AUDIO_ENGINES[settings.engine]) speakAudio(text, seconds, mine, finish);
     else speakBrowser(text, seconds, finish);
   }
 
@@ -155,7 +155,8 @@
     speechSynthesis.speak(u);
   }
 
-  // Gemini answers with base64 WAV; play it from a blob so the browser decodes it.
+  // The background worker answers with base64 audio (WAV from Gemini and VieNeu, MP3 from Azure);
+  // play it from a blob so the browser decodes it.
   function loadAudio(result) {
     const audio = new Audio(URL.createObjectURL(globalThis.WVO.audioBlob(result)));
     // Speeding up to catch up with the subtitles must not raise the pitch.
@@ -164,12 +165,12 @@
       audio.onloadedmetadata = () => resolve(audio);
       audio.onerror = () => {
         URL.revokeObjectURL(audio.src);
-        reject(new Error('the page could not play the Gemini audio'));
+        reject(new Error('the page could not play the synthesised audio'));
       };
     });
   }
 
-  async function speakGemini(text, seconds, mine, finish) {
+  async function speakAudio(text, seconds, mine, finish) {
     const requested = Date.now();
     try {
       const result = await sendToExtension({ type: 'tts', text });
@@ -183,7 +184,7 @@
       const left = seconds - (Date.now() - requested) / 1000;
       let rate = settings.rate * (1 + 0.15 * pressure);
       if (left > 0.3) rate = Math.max(rate, audio.duration / left);
-      audio.playbackRate = Math.min(rate, MAX_GEMINI_RATE);
+      audio.playbackRate = Math.min(rate, MAX_AUDIO_RATE);
       const done = () => {
         URL.revokeObjectURL(audio.src);
         if (currentAudio === audio) currentAudio = null;
@@ -200,17 +201,18 @@
         throw err;
       }
     } catch (err) {
-      reportGeminiError(err);
+      reportAudioError(err);
       // Say the line with the browser voice rather than skip it.
       if (mine === generation) speakBrowser(text, seconds, finish);
     }
   }
 
-  function reportGeminiError(err) {
-    console.error('Win Voice Over: Gemini TTS failed, using the browser voice', err);
-    if (geminiErrorShown) return;
-    geminiErrorShown = true;
-    toast(`Win Voice Over: Gemini TTS failed (${err.message}), using the browser voice`, 5000);
+  function reportAudioError(err) {
+    const name = AUDIO_ENGINES[settings.engine] || 'TTS';
+    console.error(`Win Voice Over: ${name} failed, using the browser voice`, err);
+    if (audioErrorShown) return;
+    audioErrorShown = true;
+    toast(`Win Voice Over: ${name} failed (${err.message}), using the browser voice`, 5000);
   }
 
   function cancelAll() {
@@ -707,7 +709,7 @@
       const wasEnabled = settings.enabled;
       settings = { ...DEFAULTS, ...changes.settings.newValue };
       // A changed voice, model or engine deserves a fresh error report if it fails too.
-      geminiErrorShown = false;
+      audioErrorShown = false;
       if (!settings.enabled) stopSpeaking();
       if (wasEnabled !== settings.enabled) {
         refreshOcr();

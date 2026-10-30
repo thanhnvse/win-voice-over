@@ -20,6 +20,8 @@
       ?mode=ocr     subtitles burned into the video picture
       ?mode=gemini  DOM captions spoken with the Gemini engine (API faked, audio real)
       ?mode=gemini-error  the Gemini API fails, so lines fall back to the browser voice
+      ?mode=azure, ?mode=azure-error  the same two checks with the Azure engine
+      ?mode=vieneu, ?mode=vieneu-error  the same two with VieNeu (the error is a stopped server)
   -->
   <video id="video" muted playsinline></video>
   <div class="caption-box"></div>

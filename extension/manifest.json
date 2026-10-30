@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Win Voice Over",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Reads subtitles aloud with text-to-speech while you watch, including subtitles burned into the picture.",
   "icons": {
     "16": "icons/icon-16.png",
@@ -10,7 +10,11 @@
     "128": "icons/icon-128.png"
   },
   "permissions": ["storage", "activeTab", "offscreen"],
-  "host_permissions": ["https://generativelanguage.googleapis.com/*"],
+  "host_permissions": [
+    "https://generativelanguage.googleapis.com/*",
+    "https://*.tts.speech.microsoft.com/*",
+    "http://127.0.0.1:8000/*"
+  ],
   "background": { "service_worker": "background.js" },
   "action": {
     "default_popup": "popup.html",

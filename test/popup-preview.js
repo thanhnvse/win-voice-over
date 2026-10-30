@@ -9,12 +9,26 @@ const area = (store) => ({
   remove: async (key) => { delete store[key]; },
 });
 
+// A fake VieNeu health check: ?vieneu=running starts with the server up.
+const realFetch = window.fetch.bind(window);
+window.fetch = async (url, init) => {
+  if (url !== 'http://127.0.0.1:8000/health') return realFetch(url, init);
+  if (params.get('vieneu') !== 'running') throw new TypeError('Failed to fetch');
+  return new Response('{"status":"ok"}');
+};
+
 window.chrome = {
   storage: { sync: area(syncStore), local: area(localStore) },
   tabs: { query: async () => [{ id: 1, url: 'https://motchilltu.com/xem-phim/x/' }], sendMessage: async () => ({}) },
   runtime: {
-    // Stands in for background.js: answers the popup's Gemini test like a missing key would.
-    sendMessage: async (msg) => (msg.type === 'tts' ? { error: 'no Gemini API key; add one in the popup' } : {}),
+    // Stands in for background.js: answers the popup's engine test the way a missing key
+    // or a stopped VieNeu server would.
+    sendMessage: async (msg) => {
+      if (msg.type !== 'tts') return {};
+      const { engine } = syncStore.settings;
+      if (engine === 'vieneu') return { error: 'VieNeu is not reachable at 127.0.0.1:8000' };
+      return { error: `no ${engine === 'azure' ? 'Azure' : 'Gemini'} API key; add one in the popup` };
+    },
   },
 };
 
