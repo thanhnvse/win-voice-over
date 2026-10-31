@@ -1,90 +1,334 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="color-scheme" content="light dark">
+  <title>Win Voice Over</title>
   <style>
-    body { width: 280px; margin: 0; padding: 14px; font: 13px/1.4 system-ui, sans-serif; color: #222; }
-    h1 { font-size: 15px; margin: 0 0 12px; }
-    label { display: block; margin: 10px 0 4px; }
-    select, input[type=range], input[type=password], input[type=text], textarea { width: 100%; box-sizing: border-box; }
-    textarea { font: inherit; resize: vertical; }
-    .row { display: flex; align-items: center; gap: 8px; }
-    .value { float: right; color: #666; }
-    button { width: 100%; margin-top: 8px; padding: 6px; cursor: pointer; }
-    .hint { color: #666; font-size: 12px; margin-top: 10px; }
-    .status { color: #555; font-size: 12px; margin: 6px 0 0; min-height: 16px; }
-    #gemini, #azure, #vieneu { border-left: 3px solid #2563eb; padding-left: 8px; margin-top: 8px; }
+    /* macOS look: grouped rows as in System Settings, system controls, light and dark. */
+    :root {
+      color-scheme: light dark;
+      --bg: #f0f0f2;
+      --group: #fff;
+      --group-edge: rgba(0, 0, 0, .07);
+      --separator: rgba(0, 0, 0, .08);
+      --text: rgba(0, 0, 0, .86);
+      --text-2: rgba(0, 0, 0, .52);
+      --accent: #007aff;
+      --focus: rgba(0, 122, 255, .45);
+      --control: #fff;
+      --control-edge: 0 0 0 .5px rgba(0, 0, 0, .16), 0 .5px 1.5px rgba(0, 0, 0, .16);
+      --pressed: brightness(.94);
+      --field: #fff;
+      --field-edge: rgba(0, 0, 0, .18);
+      --track: rgba(0, 0, 0, .11);
+      --knob: #fff;
+      --switch-off: rgba(0, 0, 0, .1);
+      --chip: rgba(0, 0, 0, .06);
+      --red: #d70015;
+      --green: #248a3d;
+      --dot-on: #34c759;
+      --dot-off: #ff3b30;
+      --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='4' fill='%23007aff'/%3E%3Cpath d='M5.3 6.6 8 4.2l2.7 2.4M5.3 9.4 8 11.8l2.7-2.4' fill='none' stroke='%23fff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1e1e1f;
+        --group: #2a2a2c;
+        --group-edge: rgba(255, 255, 255, .06);
+        --separator: rgba(255, 255, 255, .08);
+        --text: rgba(255, 255, 255, .88);
+        --text-2: rgba(255, 255, 255, .55);
+        --accent: #0a84ff;
+        --focus: rgba(10, 132, 255, .55);
+        --control: #4b4b4e;
+        --control-edge: 0 0 0 .5px rgba(0, 0, 0, .5), 0 .5px 1px rgba(0, 0, 0, .35), inset 0 .5px 0 rgba(255, 255, 255, .1);
+        --pressed: brightness(1.2);
+        --field: #1e1e1f;
+        --field-edge: rgba(255, 255, 255, .16);
+        --track: rgba(255, 255, 255, .16);
+        --knob: #dcdcde;
+        --switch-off: rgba(255, 255, 255, .16);
+        --chip: rgba(255, 255, 255, .1);
+        --red: #ff6961;
+        --green: #30d158;
+        --dot-on: #30d158;
+        --dot-off: #ff453a;
+        --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='4' fill='%230a84ff'/%3E%3Cpath d='M5.3 6.6 8 4.2l2.7 2.4M5.3 9.4 8 11.8l2.7-2.4' fill='none' stroke='%23fff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      }
+    }
+
+    [hidden] { display: none !important; }
+    html { background: var(--bg); }
+    body {
+      width: 340px; margin: 0; padding: 12px 12px 10px; box-sizing: border-box;
+      background: var(--bg); color: var(--text);
+      font: 13px/1.3 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased; cursor: default;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Header: app icon, name, master switch. */
+    .app { display: flex; align-items: center; gap: 10px; padding: 0 4px 12px 2px; }
+    .app img { width: 32px; height: 32px; flex: none; }
+    .app .name { flex: 1; min-width: 0; }
+    h1 { font-size: 13px; font-weight: 600; margin: 0; }
+    .sub { margin: 2px 0 0; font-size: 11px; color: var(--text-2); display: flex; align-items: center; gap: 5px; }
+    .kbd {
+      font: 500 11px/16px -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      height: 16px; padding: 0 5px; border-radius: 4px; color: var(--text-2);
+      background: var(--chip); box-shadow: none;
+    }
+
+    h2 { font-size: 12px; font-weight: 600; margin: 14px 10px 5px; display: flex; gap: 6px; align-items: baseline; }
+    h2 .host { font-weight: 400; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+    .group { background: var(--group); border-radius: 10px; box-shadow: 0 0 0 .5px var(--group-edge); }
+    .group + .group { margin-top: 10px; }
+    .footnote { font-size: 11px; line-height: 1.35; color: var(--text-2); margin: 5px 10px 0; overflow-wrap: anywhere; }
+    .footnote + .group { margin-top: 10px; }
+
+    /* One setting per row: name on the left, its control on the right. */
+    .row { position: relative; display: flex; align-items: center; gap: 10px; box-sizing: border-box; min-height: 28px; padding: 3px 10px; }
+    .row + .row::before { content: ""; position: absolute; top: 0; left: 10px; right: 10px; border-top: .5px solid var(--separator); }
+    .row > .label { flex: none; width: 92px; }
+    .row > .control { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
+    .row.tall { align-items: flex-start; padding-top: 6px; padding-bottom: 6px; }
+    .row.tall > .label { padding-top: 3px; }
+    .row.toggle > .label { flex: 1; width: auto; }
+    .row.secondary > .label, .group.off .label { color: var(--text-2); }
+    .line { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .control > .grow, .line > .grow { flex: 1; min-width: 0; }
+    .control.stack { flex-direction: column; align-items: stretch; gap: 3px; }
+    output { flex: none; width: 34px; text-align: right; color: var(--text-2); font-variant-numeric: tabular-nums; }
+
+    /* Controls */
+    select, input, textarea, button { font: inherit; color: inherit; margin: 0; }
+    :focus { outline: none; }
+    :focus-visible { outline: 3px solid var(--focus); outline-offset: 0; }
+    select {
+      appearance: none; width: 100%; min-width: 0; height: 22px; padding: 0 24px 0 8px;
+      border: 0; border-radius: 5px; text-overflow: ellipsis;
+      background: var(--chevron) no-repeat right 3px center / 16px 16px, var(--control);
+      box-shadow: var(--control-edge);
+    }
+    input[type=text], input[type=password], textarea {
+      width: 100%; min-width: 0; box-sizing: border-box; border: .5px solid var(--field-edge);
+      border-radius: 5px; background: var(--field); padding: 0 7px; height: 22px;
+    }
+    textarea { height: auto; padding: 3px 7px; resize: vertical; line-height: 1.3; display: block; }
+    input[type=text]:focus, input[type=password]:focus, textarea:focus { outline: 3px solid var(--focus); border-color: var(--accent); }
+    ::placeholder { color: var(--text-2); opacity: .8; }
+    button {
+      flex: none; height: 22px; padding: 0 11px; border: 0; border-radius: 5px;
+      background: var(--control); box-shadow: var(--control-edge); white-space: nowrap;
+    }
+    button:active:not(:disabled) { filter: var(--pressed); }
+    button.primary { background: var(--accent); color: #fff; box-shadow: 0 .5px 1.5px rgba(0, 0, 0, .2); }
+    button.link {
+      height: auto; padding: 0; background: none; box-shadow: none; color: var(--accent); font-size: 11px;
+    }
+    button.link:hover:not(:disabled) { text-decoration: underline; }
+    :disabled { opacity: .4; }
+    button.kbd:hover:not(:disabled) { color: var(--text); }
+
+    input[type=checkbox].switch {
+      appearance: none; position: relative; flex: none; width: 32px; height: 19px; margin: 0;
+      border-radius: 10px; background: var(--switch-off); transition: background .18s;
+    }
+    input[type=checkbox].switch::before {
+      content: ""; position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; border-radius: 50%;
+      background: #fff; box-shadow: 0 .5px 1.5px rgba(0, 0, 0, .3), 0 0 0 .5px rgba(0, 0, 0, .05);
+      transition: transform .18s;
+    }
+    input[type=checkbox].switch:checked { background: var(--accent); }
+    input[type=checkbox].switch:checked::before { transform: translateX(13px); }
+
+    /* --p is the slider's position, 0 to 1, set by popup.js; the fill ends under the knob. */
+    input[type=range] { appearance: none; flex: 1; min-width: 0; height: 18px; margin: 0; background: none; --p: .5; }
+    input[type=range]::-webkit-slider-runnable-track {
+      height: 4px; border-radius: 2px;
+      background: linear-gradient(to right, var(--accent) calc(8px + (100% - 16px) * var(--p)), var(--track) 0);
+    }
+    input[type=range]::-webkit-slider-thumb {
+      appearance: none; width: 16px; height: 16px; margin-top: -6px; border-radius: 50%; background: var(--knob);
+      box-shadow: 0 0 0 .5px rgba(0, 0, 0, .14), 0 1px 2.5px rgba(0, 0, 0, .3);
+    }
+
+    /* Status lines: role="status" in the markup; data-kind gives them their colour. */
+    .status { font-size: 11px; line-height: 1.35; color: var(--text-2); margin: 0; }
+    .status:empty, .footnote:empty { display: none; }
+    [data-kind=ok] { color: var(--green); }
+    [data-kind=error] { color: var(--red); }
+    [data-kind=busy]::before {
+      content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 5px; vertical-align: -1px;
+      border: 1.5px solid currentColor; border-right-color: transparent; border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(1turn); } }
+    .dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--track); }
+    .dot[data-state=on] { background: var(--dot-on); }
+    .dot[data-state=off] { background: var(--dot-off); }
+
+    /* The round help button of macOS, at the foot of the window. */
+    .foot { display: flex; align-items: flex-start; gap: 8px; }
+    .foot .footnote { flex: 1; }
+    button.help {
+      width: 20px; height: 20px; padding: 0; margin: 4px 2px 0 auto; border-radius: 50%;
+      font-size: 12px; font-weight: 600; color: var(--text-2);
+    }
+    .help-text {
+      margin: 8px 0 0; padding: 8px 10px 8px 26px; border-radius: 10px; background: var(--group);
+      box-shadow: 0 0 0 .5px var(--group-edge); font-size: 11px; line-height: 1.4; color: var(--text-2);
+    }
+    .help-text li + li { margin-top: 3px; }
   </style>
 </head>
 <body>
-  <h1>Win Voice Over</h1>
-  <div class="row">
-    <input type="checkbox" id="enabled">
-    <label for="enabled" style="margin:0">Read subtitles aloud</label>
+  <header class="app">
+    <img src="icons/icon-128.png" alt="">
+    <div class="name">
+      <h1 id="appName">Win Voice Over</h1>
+      <p class="sub">
+        <span id="readingState">Reads subtitles aloud</span>
+        <button class="kbd" id="hotkey" title="Change the shortcut"></button>
+      </p>
+    </div>
+    <input type="checkbox" class="switch" id="enabled" role="switch" aria-labelledby="appName" aria-describedby="readingState">
+  </header>
+
+  <div class="group" id="voiceGroup">
+    <div class="row">
+      <label class="label" for="engine">Engine</label>
+      <div class="control">
+        <select id="engine">
+          <option value="browser">Browser voice</option>
+          <option value="gemini">Gemini TTS</option>
+          <option value="azure">Azure TTS</option>
+          <option value="vieneu">VieNeu-TTS</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row tall" data-engine="gemini">
+      <label class="label" for="geminiKey">API key</label>
+      <div class="control stack">
+        <input type="password" id="geminiKey" autocomplete="off" spellcheck="false">
+        <div class="line">
+          <p class="status grow" id="geminiKeyStatus" role="status"></p>
+          <button class="link" id="geminiKeyRemove" hidden>Remove</button>
+        </div>
+      </div>
+    </div>
+    <div class="row" data-engine="gemini">
+      <label class="label" for="geminiModel">Model</label>
+      <div class="control"><select id="geminiModel"></select></div>
+    </div>
+    <div class="row" data-engine="gemini">
+      <label class="label" for="geminiVoice">Voice</label>
+      <div class="control"><select id="geminiVoice"></select></div>
+    </div>
+    <div class="row tall" data-engine="gemini">
+      <label class="label" for="geminiStyle">Style</label>
+      <div class="control"><textarea id="geminiStyle" rows="2" spellcheck="false"></textarea></div>
+    </div>
+
+    <div class="row tall" data-engine="azure">
+      <label class="label" for="azureKey">Key</label>
+      <div class="control stack">
+        <input type="password" id="azureKey" autocomplete="off" spellcheck="false">
+        <div class="line">
+          <p class="status grow" id="azureKeyStatus" role="status"></p>
+          <button class="link" id="azureKeyRemove" hidden>Remove</button>
+        </div>
+      </div>
+    </div>
+    <div class="row" data-engine="azure">
+      <label class="label" for="azureRegion">Region</label>
+      <div class="control">
+        <input type="text" id="azureRegion" autocomplete="off" spellcheck="false" placeholder="southeastasia">
+      </div>
+    </div>
+    <div class="row" data-engine="azure">
+      <label class="label" for="azureVoice">Voice</label>
+      <div class="control"><select id="azureVoice"></select></div>
+    </div>
+
+    <div class="row" data-engine="vieneu">
+      <span class="label">Server</span>
+      <div class="control">
+        <span class="dot" id="vieneuDot"></span>
+        <span class="grow" id="vieneuState" role="status">Checking…</span>
+        <button id="vieneuCheck">Check</button>
+      </div>
+    </div>
+    <div class="row" data-engine="vieneu">
+      <label class="label" for="vieneuVoice">Voice</label>
+      <div class="control"><select id="vieneuVoice"></select></div>
+    </div>
+
+    <div class="row" id="voiceRow">
+      <label class="label" for="voice" id="voiceLabel">Voice</label>
+      <div class="control"><select id="voice"></select></div>
+    </div>
   </div>
-  <div class="row" style="margin-top:8px">
-    <input type="checkbox" id="ocr">
-    <label for="ocr" style="margin:0">Read hard subtitles on this site (OCR)</label>
+  <p class="footnote" data-engine="browser">Free and instant. <span id="browserPrivacy"></span></p>
+  <p class="footnote" data-engine="gemini">Free key at
+    <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a>.
+    It stays on this device; subtitle text is sent to Google.</p>
+  <p class="footnote" data-engine="azure">The voices Edge reads with. In the
+    <a href="https://portal.azure.com" target="_blank">Azure portal</a>, create a Speech resource,
+    then copy KEY 1 and its region from <i>Keys and Endpoint</i>. Subtitle text is sent to Microsoft.</p>
+  <p class="footnote" data-engine="vieneu"><span>Free, no key. It runs on this computer, so subtitle
+    text stays here.</span> <span id="vieneuStart"></span></p>
+
+  <div class="group">
+    <div class="row">
+      <label class="label" for="rate">Speed</label>
+      <div class="control">
+        <input type="range" id="rate" min="0.7" max="2" step="0.1">
+        <output id="rateValue" for="rate"></output>
+      </div>
+    </div>
+    <div class="row">
+      <label class="label" for="duck">Movie volume</label>
+      <div class="control">
+        <input type="range" id="duck" min="0" max="1" step="0.05">
+        <output id="duckValue" for="duck"></output>
+      </div>
+    </div>
+    <div class="row">
+      <div class="control">
+        <button class="primary" id="test">Test voice</button>
+        <p class="status grow" id="testStatus" role="status"></p>
+      </div>
+    </div>
   </div>
+  <p class="footnote" id="playbackNote"></p>
 
-  <label for="engine">Speech engine</label>
-  <select id="engine">
-    <option value="browser">Browser voice (free, instant)</option>
-    <option value="gemini">Gemini TTS (expressive, needs an API key)</option>
-    <option value="azure">Azure TTS (the Edge voices, needs a key)</option>
-    <option value="vieneu">VieNeu (free, runs on this computer)</option>
-  </select>
-
-  <div id="gemini" hidden>
-    <label for="geminiKey">Gemini API key</label>
-    <input type="password" id="geminiKey" autocomplete="off" spellcheck="false" placeholder="Paste your key">
-    <p class="status" id="keyStatus"></p>
-    <label for="geminiModel">Model</label>
-    <select id="geminiModel"></select>
-    <label for="geminiVoice">Gemini voice</label>
-    <select id="geminiVoice"></select>
-    <label for="geminiStyle">Speaking style</label>
-    <textarea id="geminiStyle" rows="3"></textarea>
+  <h2>This site <span class="host" id="host"></span></h2>
+  <div class="group" id="siteGroup">
+    <div class="row toggle">
+      <label class="label" for="ocr">Read burned-in subtitles (OCR)</label>
+      <input type="checkbox" class="switch" id="ocr" role="switch">
+    </div>
+    <div class="row toggle">
+      <span class="label">Subtitle element</span>
+      <button id="pick">Pick…</button>
+      <button id="clear">Forget</button>
+    </div>
   </div>
-
-  <div id="azure" hidden>
-    <label for="azureKey">Azure Speech key</label>
-    <input type="password" id="azureKey" autocomplete="off" spellcheck="false" placeholder="Paste KEY 1">
-    <p class="status" id="azureKeyStatus"></p>
-    <label for="azureRegion">Region</label>
-    <input type="text" id="azureRegion" autocomplete="off" spellcheck="false" placeholder="southeastasia">
-    <label for="azureVoice">Azure voice</label>
-    <select id="azureVoice"></select>
+  <div class="foot">
+    <p class="footnote" id="siteStatus" role="status"></p>
+    <button class="help" id="helpButton" title="Help" aria-label="Help" aria-expanded="false" aria-controls="help">?</button>
   </div>
-
-  <div id="vieneu" hidden>
-    <label for="vieneuVoice">VieNeu voice</label>
-    <select id="vieneuVoice"></select>
-    <p class="status" id="vieneuStatus"></p>
-  </div>
-
-  <label for="voice">Browser voice <span class="value" id="voiceRole"></span></label>
-  <select id="voice"></select>
-
-  <label for="rate">Base speed <span class="value" id="rateValue"></span></label>
-  <input type="range" id="rate" min="0.7" max="2" step="0.1">
-
-  <label for="duck">Movie volume while reading <span class="value" id="duckValue"></span></label>
-  <input type="range" id="duck" min="0" max="1" step="0.05">
-
-  <button id="test">Test voice</button>
-  <p class="status" id="testStatus"></p>
-  <button id="pick">Pick subtitle element on this page</button>
-  <button id="clear">Forget picked element for this site</button>
-
-  <p class="hint">Hotkey: Alt+Shift+R turns reading on or off.<br>
-    YouTube and Netflix work out of the box. Turn the site's subtitles on first.<br>
-    OCR is for subtitles burned into the picture; it is on by default for motchill.<br>
-    Gemini keys come from <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a>;
-    the key stays on this device and subtitle text is sent to Google.<br>
-    Azure: create a Speech resource in the <a href="https://portal.azure.com" target="_blank">Azure portal</a>,
-    then copy KEY 1 and the region from <i>Keys and Endpoint</i>; subtitle text is sent to Microsoft.<br>
-    VieNeu runs on this computer, so subtitle text stays here.</p>
+  <ul class="help-text" id="help" hidden>
+      <li>Turn on the site's own subtitles first: Win Voice Over reads what they show.</li>
+      <li>YouTube and Netflix work as they are. On another site, choose <b>Pick…</b>, pause on a
+        subtitle line and click it.</li>
+      <li>OCR reads subtitles that are part of the picture. It is on by default for motchill.</li>
+      <li>The shortcut next to the name turns reading on or off; click it to change it.</li>
+  </ul>
   <script src="shared.js"></script>
   <script src="popup.js"></script>
 </body>

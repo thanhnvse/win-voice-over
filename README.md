@@ -58,8 +58,8 @@ python scripts/make-icons.py
 
 ## Choosing a speech engine
 
-Pick one in the popup under *Speech engine*. Whatever you pick, a line that fails is
-read by the browser voice instead.
+Pick one in the popup's **Engine** menu. Whatever you pick, a line that fails is
+read by the browser voice instead: the popup's **Fallback** voice.
 
 | Engine | Needs | Cost | Subtitle text goes to | Notes |
 |---|---|---|---|---|
@@ -74,7 +74,7 @@ voices with no account at all.
 ## Gemini TTS (expressive voices)
 
 1. Create a key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey).
-2. Popup → *Speech engine* → **Gemini TTS**, paste the key, then **Test voice**.
+2. Popup → **Engine** → **Gemini TTS**, paste the key, then **Test voice**.
    The status line shows how long the round trip took.
 3. Pick a model (*3.8 Flash TTS*, or the cheaper *3.8 Flash-Lite TTS*), one of
    the 30 Gemini voices, and a speaking style. The style is a direction such as
@@ -110,7 +110,7 @@ engine asks Azure for them directly.
    pricing tier.
 2. Open the resource, then **Keys and Endpoint**. Copy **KEY 1** and the
    **Location/Region** value (for example `southeastasia`).
-3. Popup → *Speech engine* → **Azure TTS**. Paste the key, type the region, pick
+3. Popup → **Engine** → **Azure TTS**. Paste the key, type the region, pick
    HoaiMy or NamMinh, then **Test voice**.
 
 How it behaves:
@@ -215,8 +215,9 @@ you watch; close it or press Ctrl+C to stop the server.
 
 ### Using it
 
-Popup → *Speech engine* → **VieNeu**, pick a voice, then **Test voice**. The popup's
-VieNeu section shows whether the server is running.
+Popup → **Engine** → **VieNeu-TTS**, pick a voice, then **Test voice**. The popup's
+**Server** row shows whether the server is running (**Check** looks again) and, when it
+is not, how to start it on this system.
 
 How it behaves:
 
@@ -244,8 +245,8 @@ Not measured yet: any of this with a video playing, which competes for the CPU.
 |---|---|---|
 | `video.textTracks` | any HTML5 player that loads `.vtt` tracks | `cuechange` events |
 | Built-in DOM adapters | YouTube, Netflix | `MutationObserver` on the caption container |
-| Picked element | any other site | popup → *Pick subtitle element*, pause on a line, click it |
-| OCR | sites with hard subtitles; on by default for `motchill` hosts | popup → *Read hard subtitles on this site* |
+| Picked element | any other site | popup → *This site* → **Pick…**, pause on a line, click it |
+| OCR | sites with hard subtitles; on by default for `motchill` hosts | popup → *This site* → **Read burned-in subtitles (OCR)** |
 
 For soft subtitles, turn the site's own subtitles on first; the extension reads
 what the player shows.
@@ -286,8 +287,9 @@ Limits:
 - YouTube auto-generated captions scroll word by word; only the new words are read.
 - Skips `[music]`, `(laughs)`, `♪`, and lines with no letters or digits.
 - Pausing or seeking stops speech immediately.
-- **Alt+Shift+R** toggles reading (change it at `chrome://extensions/shortcuts` or
-  `edge://extensions/shortcuts`).
+- **Alt+Shift+R** (⌥⇧R on macOS) toggles reading. The popup shows the shortcut the
+  browser has next to the name; click it to change it at `chrome://extensions/shortcuts`
+  (`edge://extensions/shortcuts` in Edge).
 
 ## Manual test
 
@@ -300,20 +302,21 @@ reload; the popup's own files are read fresh each time it opens.
 | Check | How | Expected |
 |---|---|---|
 | Extension loads | `chrome://extensions` | No **Errors** button on the card |
-| Browser voice | Popup → pick a Vietnamese voice (Edge: *HoaiMy Online (Natural)*; Chrome on macOS: *Linh*) → **Test voice** | Vietnamese sentence is spoken |
+| Popup | Open it with each engine, in light and in dark mode | No scroll bar; the colours follow the system |
+| Browser voice | Popup → **Voice** → a Vietnamese voice (Edge: *HoaiMy Online (Natural)*; Chrome on macOS: *Linh*) → **Test voice** | Vietnamese sentence is spoken; the status names the voice |
 | YouTube | Video with Vietnamese captions, CC on | Each line spoken; movie volume dips while speaking |
 | Pause / seek | Pause, or jump in the timeline | Speech stops at once |
-| Hotkey | Alt+Shift+R twice | Toasts "Win Voice Over: off", then "on" |
-| Netflix | Vietnamese subtitles on | Lines spoken; if not, use *Pick subtitle element* |
-| OCR | motchill episode, past the ad | OCR box ticked in the popup; lines spoken 0.5–2 s after they appear |
+| Hotkey | Alt+Shift+R (⌥⇧R) twice | Toasts "Win Voice Over: off", then "on" |
+| Netflix | Vietnamese subtitles on | Lines spoken; if not, use **Pick…** |
+| OCR | motchill episode, past the ad | OCR switch on in the popup; lines spoken 0.5–2 s after they appear |
 | OCR engine | Extensions page → Win Voice Over → *Inspect views: offscreen.html* | Appears after the first play; "Parameter not found" warnings are harmless |
-| Gemini | Popup → *Gemini TTS* → paste key → **Test voice** | "Generated in N s" and the sentence is spoken |
+| Gemini | Popup → **Gemini TTS** → paste key → **Test voice** | "✓ Generated in N s" and the sentence is spoken at the popup's speed |
 | Gemini in a video | Same video as above with Gemini selected | Gemini voice reads the lines; any failure falls back to the browser voice with a toast |
-| Azure | Popup → *Azure TTS* → paste key, set region → **Test voice** | "Generated in N s" and HoaiMy (or NamMinh) says the sentence |
+| Azure | Popup → **Azure TTS** → paste key, set region → **Test voice** | "✓ Generated in N s" and HoaiMy (or NamMinh) says the sentence |
 | Azure in a video | Same video as above with Azure selected | The Azure voice reads the lines; on the free tier, lines past 20 a minute fall back to the browser voice with a toast |
-| VieNeu | Server running → popup → *VieNeu* → **Test voice** | "Generated in N s" and the chosen voice says the sentence |
-| VieNeu on macOS | Open *win-voice-over*, then the popup on *VieNeu*; later W → **Stop VieNeu** | The W is dimmed, then bright; the popup says "Server running on 127.0.0.1:8000."; after Stop the W is gone and the popup says "Server not running…" |
-| VieNeu on Windows | Double-click `start-vieneu.cmd`, then the popup on *VieNeu*; later close the window | The popup says "Server running on 127.0.0.1:8000.", then "Server not running…" |
+| VieNeu | Server running → popup → **VieNeu-TTS** → **Test voice** | "✓ Generated in N s" and the chosen voice says the sentence |
+| VieNeu on macOS | Open *win-voice-over*, then the popup on *VieNeu-TTS*; later W → **Stop VieNeu** | The W is dimmed, then bright; the popup's *Server* row says Running; after Stop the W is gone and **Check** turns the row to Not running |
+| VieNeu on Windows | Double-click `start-vieneu.cmd`, then the popup on *VieNeu-TTS*; later close the window | The *Server* row says Running, then, after **Check**, Not running |
 | VieNeu stopped | Stop the server, play a video with VieNeu selected | Toast "VieNeu failed (VieNeu is not reachable at 127.0.0.1:8000)"; lines read by the browser voice |
 
 Where to look when something is wrong:
@@ -346,11 +349,16 @@ Then open `http://localhost:5310/test/harness.html` with one of these modes:
 - `?mode=gemini`, `?mode=azure` or `?mode=vieneu`: DOM captions read by that engine
   (the engine is faked, the WAV decoding is real);
 - `?mode=gemini-error`, `?mode=azure-error` or `?mode=vieneu-error`: the engine fails,
-  so lines fall back to the browser voice.
+  so lines fall back to the browser voice;
+- `?mode=dom-picked` and `?mode=dom-other-frame`: a pick saved the 0.6 way, under the
+  tab's host with the frame it was made in; the page reads the first and ignores the
+  second, which belongs to another frame.
 
 `http://localhost:5310/test/popup-preview.html?engine=gemini` (or `azure`, `vieneu`)
-renders the real popup against a fake `chrome` API; with `vieneu`, add
-`&vieneu=running` to show a running server. `test/voice-samples.html` plays six test
+renders the real popup against a fake `chrome` API. More switches: `&vieneu=running` (a
+running server), `&key=saved` (stored keys), `&tts=ok` (Test voice plays a second of
+silence), `&picked=1` (a picked element), `&pick=stale` (Pick fails as on a tab opened
+before the extension loaded) and `&page=settings` (a tab that is not a web page). `test/voice-samples.html` plays six test
 lines with the browser voices for comparing them with the other engines.
 
 The background worker's Gemini, Azure and VieNeu code (request shape, parsing, cache,

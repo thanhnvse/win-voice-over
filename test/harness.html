@@ -16,6 +16,8 @@
     whose utterances take as long as real speech would. Serve with test/serve.py so the
     page gets the extension's CSP.
       ?mode=dom     captions rendered into the DOM, picked-selector path (default)
+      ?mode=dom-picked       the same with a pick in the 0.6 format, { selector, frame }
+      ?mode=dom-other-frame  a pick made in another frame, which this page must not read
       ?mode=tracks  captions delivered through video.textTracks
       ?mode=ocr     subtitles burned into the video picture
       ?mode=gemini  DOM captions spoken with the Gemini engine (API faked, audio real)

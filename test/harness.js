@@ -16,6 +16,9 @@ const ocrEngine = () => (engine ??= createOcrEngine(new URL('../extension/', loc
 
 const stored = {
   dom: { selectors: { [location.hostname]: '.caption-box' } },
+  // Picks since 0.6: stored under the tab's host with the frame they apply to.
+  'dom-picked': { selectors: { [location.hostname]: { selector: '.caption-box', frame: location.hostname } } },
+  'dom-other-frame': { selectors: { [location.hostname]: { selector: '.caption-box', frame: 'player.example' } } },
   tracks: {},
   ocr: { ocrSites: { [location.hostname]: true } },
   gemini: { selectors: { [location.hostname]: '.caption-box' }, settings: { engine: 'gemini' } },
@@ -263,7 +266,7 @@ async function run() {
   }
   record('play');
   await video.play();
-  if (mode === 'dom' || audioMode) {
+  if (mode.startsWith('dom') || audioMode) {
     const box = document.querySelector('.caption-box');
     DOM_LINES.forEach((text, i) => setTimeout(() => { box.textContent = text; }, i * 1000));
   }

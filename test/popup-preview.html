@@ -7,7 +7,11 @@
 <body>
   <!-- Renders the real extension/popup.html and popup.js against a fake chrome API.
        ?engine=gemini, azure or vieneu opens with that engine selected.
-       With vieneu, ?vieneu=running starts with the server up. Serve with test/serve.py. -->
+       With vieneu, ?vieneu=running starts with the server up.
+       ?key=saved stores both keys; ?tts=ok answers Test voice with a second of silence.
+       ?picked=1 has a picked element for the site; ?pick=stale makes Pick fail as on a tab
+       opened before the extension loaded; ?page=settings is a tab that is not a web page.
+       Serve with test/serve.py. -->
   <script src="popup-preview.js"></script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Win Voice Over",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Reads subtitles aloud with text-to-speech while you watch, including subtitles burned into the picture.",
   "icons": {
     "16": "icons/icon-16.png",

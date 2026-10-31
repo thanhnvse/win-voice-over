@@ -2,12 +2,10 @@
   if (window.__winVoiceOverLoaded) return;
   window.__winVoiceOverLoaded = true;
 
-  const { DEFAULTS, OCR_DEFAULT_HOSTS, AUDIO_ENGINES } = globalThis.WVO;
+  const { DEFAULTS, OCR_DEFAULT_HOSTS, AUDIO_ENGINES, MAX_AUDIO_RATE } = globalThis.WVO;
   // Rough speaking speed at rate 1.0; used to fit a cue into its on-screen time.
   const CHARS_PER_SEC = 14;
   const MAX_RATE = 2.5;
-  // Engine audio is sped up without changing pitch, but past this it sounds rushed.
-  const MAX_AUDIO_RATE = 1.6;
 
   // Sites that draw captions into the DOM instead of video.textTracks.
   const SITE_SOURCES = [
@@ -87,13 +85,7 @@
   }
 
   function pickVoice() {
-    const voices = speechSynthesis.getVoices();
-    if (settings.voiceURI) {
-      const chosen = voices.find((v) => v.voiceURI === settings.voiceURI);
-      if (chosen) return chosen;
-    }
-    const vi = voices.filter((v) => v.lang.toLowerCase().startsWith('vi'));
-    return vi.find((v) => /natural|online/i.test(v.name)) || vi[0] || null;
+    return globalThis.WVO.pickVoice(speechSynthesis.getVoices(), settings.voiceURI);
   }
 
   function say(text, seconds) {
@@ -317,8 +309,18 @@
     domSource = null;
   }
 
+  // A pick is stored under the tab's host, so the popup can show and forget it, together
+  // with the host of the frame it was made in, the only frame where the selector applies.
+  function pickedSelector() {
+    const entry = selectors[siteHost()];
+    if (entry && entry.frame === location.hostname) return entry.selector;
+    // Picks saved before 0.6 are a bare selector under the frame's own host.
+    const legacy = selectors[location.hostname];
+    return typeof legacy === 'string' ? legacy : null;
+  }
+
   function refreshDomSource() {
-    const picked = selectors[location.hostname];
+    const picked = pickedSelector();
     const site = SITE_SOURCES.find((s) => s.host.test(location.hostname));
     if (picked) startDomSource({ container: picked });
     else if (site) startDomSource(site);
@@ -675,8 +677,10 @@
       e.stopPropagation();
       const selector = buildSelector(e.target);
       stopPicker();
-      chrome.storage.sync.set({ selectors: { ...selectors, [location.hostname]: selector } });
-      toast('Win Voice Over: subtitle element saved for ' + location.hostname);
+      const next = { ...selectors, [siteHost()]: { selector, frame: location.hostname } };
+      if (typeof next[location.hostname] === 'string') delete next[location.hostname];
+      chrome.storage.sync.set({ selectors: next });
+      toast('Win Voice Over: subtitle element saved for ' + siteHost());
     };
     const onKey = (e) => { if (e.key === 'Escape') stopPicker(); };
     document.addEventListener('mouseover', onOver, true);

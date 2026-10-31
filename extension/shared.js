@@ -25,6 +25,9 @@ globalThis.WVO = {
   // shown in messages.
   AUDIO_ENGINES: { gemini: 'Gemini TTS', azure: 'Azure TTS', vieneu: 'VieNeu' },
 
+  // Engine audio is sped up without changing pitch, but past this it sounds rushed.
+  MAX_AUDIO_RATE: 1.6,
+
   // Sites whose subtitles are burned into the picture, so OCR is on unless switched off.
   OCR_DEFAULT_HOSTS: /motchill/i,
 
@@ -71,6 +74,17 @@ globalThis.WVO = {
     ['Kim Thanh', 'female, Southern, story reading'], ['Adam', 'male, Southern, natural'],
     ['Quốc Tuấn', 'male, Northern, natural'],
   ],
+
+  // The chosen browser voice, else the best Vietnamese one: Edge's "Online (Natural)" voices
+  // sound far better than the rest. null when the browser has no Vietnamese voice.
+  pickVoice(voices, voiceURI) {
+    if (voiceURI) {
+      const chosen = voices.find((v) => v.voiceURI === voiceURI);
+      if (chosen) return chosen;
+    }
+    const vi = voices.filter((v) => v.lang.toLowerCase().startsWith('vi'));
+    return vi.find((v) => /natural|online/i.test(v.name)) || vi[0] || null;
+  },
 
   // Turns the background worker's { data: base64, mimeType } reply into a playable blob.
   audioBlob({ data, mimeType }) {
