@@ -368,3 +368,14 @@ header) runs under Node with a fake `fetch`:
 ```bash
 node test/background.test.mjs
 ```
+
+## License
+
+The code in this repository is under the [MIT License](LICENSE).
+
+`extension/vendor/` holds third-party files under their own licenses, listed in
+[`extension/vendor/README.md`](extension/vendor/README.md): tesseract.js and
+tesseract.js-core are Apache-2.0 (their license texts sit beside them), and the
+Vietnamese OCR model comes from `@tesseract.js-data/vie`, which declares MIT.
+VieNeu-TTS is not part of this repository: you clone it yourself, and it has its own
+license.

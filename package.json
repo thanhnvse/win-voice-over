@@ -1,6 +1,7 @@
 {
   "name": "win-voice-over",
   "private": true,
+  "license": "MIT",
   "description": "Build helpers for the Win Voice Over extension. The extension itself has no build step.",
   "scripts": {
     "vendor": "node scripts/vendor.mjs"
